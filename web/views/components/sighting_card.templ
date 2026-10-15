@@ -40,8 +40,6 @@ templ SightingCard(s sighting.Sighting) {
 		data-lon={ fmt.Sprintf("%.4f", s.Location.Longitude) }
 		data-elevation={ elevationStr(s.Location.ElevationInMetres) }
 		data-count={ countStr(s.IndividualCount) }
-		data-image-url={ firstImageURL(s.Media) }
-		data-image-creator={ firstImageCreator(s.Media) }
 	>
 		<!-- Card Top Badge -->
 		<div class="card__top-bar">
@@ -51,7 +49,6 @@ templ SightingCard(s sighting.Sighting) {
 			}
 			<span class="card__collect-indicator" aria-label="Collection status">UNCLAIMED</span>
 		</div>
-
 		<!-- Header -->
 		<header class="card__header">
 			<h2 class="card__title">{ displayName(s.Species) }</h2>
@@ -59,12 +56,10 @@ templ SightingCard(s sighting.Sighting) {
 				<p class="card__scientific">{ s.Species.ScientificName }</p>
 			}
 		</header>
-
 		<!-- Visual Media / Sprite Preview -->
 		<div class="card__gallery">
 			@Gallery(s.Media)
 		</div>
-
 		<!-- Stat Bars (Retro RPG Style) -->
 		<div class="card__stats" aria-label="Specimen stats">
 			<div class="stat-row">
@@ -89,7 +84,6 @@ templ SightingCard(s sighting.Sighting) {
 				<span class="stat-val">{ fmt.Sprintf("%d%%", s.Weather.Humidity) }</span>
 			</div>
 		</div>
-
 		<!-- Meta Information -->
 		<dl class="card__meta">
 			<dt>DATE</dt>
@@ -105,7 +99,6 @@ templ SightingCard(s sighting.Sighting) {
 				<dd>{ s.Species.Class }</dd>
 			}
 		</dl>
-
 		<!-- Card Action Buttons -->
 		<footer class="card__actions">
 			<button
@@ -164,27 +157,6 @@ func countStr(c *int) string {
 		return "1"
 	}
 	return fmt.Sprintf("%d", *c)
-}
-
-func firstImageURL(media []sighting.Media) string {
-	for _, m := range media {
-		if m.Type == "StillImage" && m.URL != "" {
-			return m.URL
-		}
-	}
-	if len(media) > 0 {
-		return media[0].URL
-	}
-	return ""
-}
-
-func firstImageCreator(media []sighting.Media) string {
-	for _, m := range media {
-		if m.Creator != "" {
-			return m.Creator
-		}
-	}
-	return ""
 }
 
 func tempPercent(actual float64) string {

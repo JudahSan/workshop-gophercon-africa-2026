@@ -12,6 +12,7 @@
 	const STORAGE_KEY_COLLECTED = 'arcade_collected_ids';
 	const STORAGE_KEY_MUTED = 'arcade_muted';
 	const STORAGE_KEY_CRT = 'arcade_crt_enabled';
+	const STORAGE_KEY_HISCORE = 'arcade_quiz_hiscore';
 
 	let collectedIds = new Set();
 	try {
@@ -91,6 +92,28 @@
 	function playModalSound() {
 		playTone(587.33, 'square', 0.06, 0.0, 0.06);
 		playTone(880.00, 'square', 0.12, 0.05, 0.07);
+	}
+
+	function playWrongSound() {
+		playTone(196, 'sawtooth', 0.12, 0.0, 0.07);
+		playTone(147, 'sawtooth', 0.25, 0.1, 0.07);
+	}
+
+	function playTickSound() {
+		playTone(1320, 'square', 0.03, 0, 0.03);
+	}
+
+	function playGameOverSound() {
+		// Classic falling arpeggio
+		[659.25, 587.33, 523.25, 392.0, 261.63].forEach((f, i) => {
+			playTone(f, 'square', 0.14, i * 0.13, 0.07);
+		});
+	}
+
+	function playStartSound() {
+		[392.0, 523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
+			playTone(f, 'square', 0.07, i * 0.06, 0.06);
+		});
 	}
 
 	// =========================================================================
@@ -277,6 +300,10 @@
 				spawnPixelConfetti(rect.left + rect.width / 2, rect.top + rect.height / 2, 35);
 			}
 
+			saveCollection(card);
+		}
+
+		function saveCollection(card) {
 			try {
 				localStorage.setItem(STORAGE_KEY_COLLECTED, JSON.stringify(Array.from(collectedIds)));
 			} catch (e) {
@@ -288,7 +315,7 @@
 			applyFilters();
 
 			// Sync modal button if open
-			if (currentModalCard && currentModalCard.dataset.id === id) {
+			if (currentModalCard && currentModalCard.dataset.id === card.dataset.id) {
 				updateModalCollectBtn();
 			}
 		}
@@ -437,11 +464,10 @@
 			playModalSound();
 
 			const d = card.dataset;
-			const imgHtml = d.imageUrl
-				? `<div class="dossier-media">
-					<img src="${escapeHtml(d.imageUrl)}" alt="${escapeHtml(d.name)}" class="dossier-img"/>
-					${d.imageCreator ? `<div class="gallery__credit">CREDIT: ${escapeHtml(d.imageCreator)}</div>` : ''}
-				   </div>`
+			// Reuse the card's server-rendered carousel so every image is browsable here too.
+			const cardCarousel = card.querySelector('.carousel');
+			const imgHtml = cardCarousel
+				? `<div class="dossier-media">${cardCarousel.outerHTML}</div>`
 				: '';
 
 			const refUrlHtml = d.refUrl
@@ -506,6 +532,7 @@
 			`;
 
 			updateModalCollectBtn();
+			modalContent.querySelectorAll('[data-carousel]').forEach(c => goToSlide(c, 0, 'instant'));
 
 			if (modal && typeof modal.showModal === 'function') {
 				modal.showModal();
@@ -543,6 +570,501 @@
 			});
 			modal.addEventListener('cancel', function () {
 				currentModalCard = null;
+			});
+		}
+
+		// =====================================================================
+		// MEDIA CAROUSEL
+		// =====================================================================
+		const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+		function carouselTrack(c) {
+			return c.querySelector('.carousel__track');
+		}
+
+		function currentSlide(c) {
+			const track = carouselTrack(c);
+			return track.clientWidth ? Math.round(track.scrollLeft / track.clientWidth) : 0;
+		}
+
+		function updateCarouselUI(c, idx) {
+			const total = c.querySelectorAll('.carousel__slide').length;
+			const counter = c.querySelector('[data-carousel-counter]');
+			if (counter) counter.textContent = (idx + 1) + '/' + total;
+
+			const thumbs = c.querySelectorAll('[data-carousel-goto]');
+			thumbs.forEach((t, i) => {
+				t.classList.toggle('is-active', i === idx);
+				t.setAttribute('aria-current', i === idx ? 'true' : 'false');
+			});
+
+			// Keep the active thumbnail in view without scrolling the page.
+			const strip = c.querySelector('.carousel__thumbs');
+			const active = thumbs[idx];
+			if (strip && active) {
+				strip.scrollLeft = active.offsetLeft - strip.clientWidth / 2 + active.offsetWidth / 2;
+			}
+		}
+
+		function goToSlide(c, idx, behavior) {
+			const total = c.querySelectorAll('.carousel__slide').length;
+			if (!total) return;
+			idx = (idx + total) % total; // wrap around both ends
+			updateCarouselUI(c, idx);
+			const track = carouselTrack(c);
+			track.scrollTo({
+				left: idx * track.clientWidth,
+				behavior: behavior || (prefersReducedMotion ? 'instant' : 'smooth')
+			});
+		}
+
+		document.addEventListener('click', function (e) {
+			const btn = e.target.closest('[data-carousel-prev], [data-carousel-next], [data-carousel-goto]');
+			if (!btn) return;
+			const c = btn.closest('[data-carousel]');
+			if (!c) return;
+			e.preventDefault();
+			playBlipSound();
+
+			const cur = currentSlide(c);
+			if (btn.hasAttribute('data-carousel-prev')) goToSlide(c, cur - 1);
+			else if (btn.hasAttribute('data-carousel-next')) goToSlide(c, cur + 1);
+			else goToSlide(c, Number(btn.dataset.carouselGoto));
+		});
+
+		// Swipes and arrow keys scroll the track natively; sync the UI once it settles.
+		// Scroll events don't bubble, so listen in the capture phase.
+		let carouselScrollTimer = null;
+		document.addEventListener('scroll', function (e) {
+			const track = e.target;
+			if (!track.classList || !track.classList.contains('carousel__track')) return;
+			clearTimeout(carouselScrollTimer);
+			carouselScrollTimer = setTimeout(function () {
+				const c = track.closest('[data-carousel]');
+				if (c) updateCarouselUI(c, currentSlide(c));
+			}, 90);
+		}, true);
+
+		// =====================================================================
+		// GUESS THE CRITTER // QUIZ MINI-GAME
+		// =====================================================================
+		const QUIZ_ROUNDS = 10;
+		const QUIZ_LIVES = 3;
+		const QUIZ_SECONDS = 15;
+		const QUIZ_REVEAL_SECONDS = 9; // picture goes from chunky pixels to sharp over this time
+		const PIXEL_LEVELS = [40, 28, 20, 14, 10, 7, 5, 3, 2, 1];
+
+		const quizModal = document.getElementById('quiz-modal');
+		const quizScreens = {
+			start: document.getElementById('quiz-start'),
+			play: document.getElementById('quiz-play'),
+			over: document.getElementById('quiz-over')
+		};
+		const quizEls = {
+			hiscore: document.getElementById('quiz-hiscore'),
+			round: document.getElementById('quiz-round'),
+			rounds: document.getElementById('quiz-rounds'),
+			lives: document.getElementById('quiz-lives'),
+			score: document.getElementById('quiz-score'),
+			timerFill: document.getElementById('quiz-timer-fill'),
+			question: document.getElementById('quiz-question'),
+			picture: document.getElementById('quiz-picture'),
+			options: document.getElementById('quiz-options'),
+			feedback: document.getElementById('quiz-feedback'),
+			overTitle: document.getElementById('quiz-over-title'),
+			finalScore: document.getElementById('quiz-final-score'),
+			finalCorrect: document.getElementById('quiz-final-correct'),
+			finalStreak: document.getElementById('quiz-final-streak'),
+			finalCaught: document.getElementById('quiz-final-caught'),
+			newHi: document.getElementById('quiz-newhi')
+		};
+
+		const quizPool = cards.map(card => ({
+			card: card,
+			id: card.dataset.id,
+			name: card.dataset.name || '',
+			scientific: card.dataset.scientific || '',
+			country: card.dataset.country || '',
+			cls: card.dataset.class || '',
+			images: Array.from(card.querySelectorAll('.carousel__slide .gallery__img'))
+				.map(img => img.getAttribute('src'))
+				.filter(Boolean)
+		}));
+
+		function uniq(values) {
+			return Array.from(new Set(values.filter(Boolean)));
+		}
+
+		function shuffle(arr) {
+			const a = arr.slice();
+			for (let i = a.length - 1; i > 0; i--) {
+				const j = Math.floor(Math.random() * (i + 1));
+				[a[i], a[j]] = [a[j], a[i]];
+			}
+			return a;
+		}
+
+		function pick(arr) {
+			return arr[Math.floor(Math.random() * arr.length)];
+		}
+
+		const quizNames = uniq(quizPool.map(e => e.name));
+		const quizCountries = uniq(quizPool.map(e => e.country));
+		const quizClasses = uniq(quizPool.map(e => e.cls));
+
+		function makeOptions(answer, choices) {
+			const wrong = shuffle(choices.filter(v => v !== answer)).slice(0, 3);
+			return shuffle(wrong.concat(answer));
+		}
+
+		function buildQuestion(entry) {
+			const types = [];
+			if (quizNames.length >= 2) {
+				// Picture rounds are the main event, so weight them up.
+				if (entry.images.length) types.push('name', 'name', 'name');
+				else if (entry.scientific && entry.scientific !== entry.name) types.push('sci');
+			}
+			if (entry.country && quizCountries.length >= 2) types.push('country');
+			if (entry.cls && quizClasses.length >= 2) types.push('class');
+			if (!types.length) return null;
+
+			const label = entry.name.toUpperCase();
+			switch (pick(types)) {
+				case 'name':
+					return { entry, pixelate: true, image: pick(entry.images), prompt: 'WHO IS THIS CRITTER?', answer: entry.name, options: makeOptions(entry.name, quizNames) };
+				case 'sci':
+					return { entry, prompt: `WHICH CRITTER GOES BY "${entry.scientific}"?`, answer: entry.name, options: makeOptions(entry.name, quizNames) };
+				case 'country':
+					return { entry, image: entry.images[0], prompt: `WHERE WAS THIS ${label} SPOTTED?`, answer: entry.country, options: makeOptions(entry.country, quizCountries) };
+				default:
+					return { entry, image: entry.images[0], prompt: `WHICH CLASS DOES THE ${label} BELONG TO?`, answer: entry.cls, options: makeOptions(entry.cls, quizClasses) };
+			}
+		}
+
+		function buildQuestions() {
+			const order = shuffle(quizPool);
+			const questions = [];
+			for (let i = 0; questions.length < QUIZ_ROUNDS && i < order.length * 3; i++) {
+				const q = buildQuestion(order[i % order.length]);
+				if (q) questions.push(q);
+			}
+			return questions;
+		}
+
+		function getHiScore() {
+			return Number(localStorage.getItem(STORAGE_KEY_HISCORE)) || 0;
+		}
+
+		let quiz = null;
+
+		function showQuizScreen(name) {
+			Object.entries(quizScreens).forEach(([key, el]) => {
+				if (el) el.hidden = key !== name;
+			});
+		}
+
+		function stopQuizTimers() {
+			if (!quiz) return;
+			cancelAnimationFrame(quiz.raf);
+			clearTimeout(quiz.nextTimer);
+			clearTimeout(quiz.loadTimer);
+		}
+
+		function renderLives() {
+			const lost = QUIZ_LIVES - quiz.lives;
+			quizEls.lives.textContent = '♥'.repeat(quiz.lives) + '♡'.repeat(lost);
+			quizEls.lives.setAttribute('aria-label', quiz.lives + ' lives left');
+		}
+
+		function openQuiz() {
+			if (!quizModal) return;
+			playModalSound();
+			quizEls.hiscore.textContent = getHiScore();
+			showQuizScreen('start');
+			if (typeof quizModal.showModal === 'function') quizModal.showModal();
+			else quizModal.setAttribute('open', '');
+			document.getElementById('quiz-start-btn').focus();
+		}
+
+		function closeQuiz() {
+			stopQuizTimers();
+			if (quizModal && typeof quizModal.close === 'function') quizModal.close();
+			else if (quizModal) quizModal.removeAttribute('open');
+		}
+
+		function startQuiz() {
+			stopQuizTimers();
+			const questions = buildQuestions();
+			if (!questions.length) return;
+			quiz = { questions, round: 0, score: 0, lives: QUIZ_LIVES, streak: 0, bestStreak: 0, correct: 0, caught: 0 };
+			quizEls.rounds.textContent = questions.length;
+			quizEls.score.textContent = '0';
+			renderLives();
+			showQuizScreen('play');
+			playStartSound();
+			renderQuestion();
+		}
+
+		// Draw the picture at 1/block resolution and scale it up with smoothing off.
+		function drawPicture(block) {
+			const img = quiz.img;
+			const canvas = quiz.canvas;
+			if (!img || !canvas || !img.naturalWidth) return;
+			const W = canvas.width;
+			const H = canvas.height;
+			const scale = Math.max(W / img.naturalWidth, H / img.naturalHeight);
+			const sw = W / scale;
+			const sh = H / scale;
+			const sx = (img.naturalWidth - sw) / 2;
+			const sy = (img.naturalHeight - sh) / 2;
+			const w = Math.max(1, Math.ceil(W / block));
+			const h = Math.max(1, Math.ceil(H / block));
+
+			const off = quiz.offscreen;
+			off.width = w;
+			off.height = h;
+			off.getContext('2d').drawImage(img, sx, sy, sw, sh, 0, 0, w, h);
+
+			const ctx = canvas.getContext('2d');
+			ctx.imageSmoothingEnabled = false;
+			ctx.clearRect(0, 0, W, H);
+			ctx.drawImage(off, 0, 0, w, h, 0, 0, W, H);
+			quiz.block = block;
+		}
+
+		function renderQuestion() {
+			const q = quiz.questions[quiz.round];
+			quiz.locked = true; // until the picture (if any) is ready
+			quiz.answered = false;
+			quiz.lastWhole = null;
+			quiz.timeLeft = QUIZ_SECONDS;
+			quiz.img = null;
+			quiz.canvas = null;
+			quiz.block = null;
+
+			quizEls.round.textContent = quiz.round + 1;
+			quizEls.question.textContent = q.prompt;
+			quizEls.feedback.textContent = '';
+			quizEls.feedback.className = 'quiz-feedback';
+			quizEls.timerFill.style.width = '100%';
+			quizEls.timerFill.classList.remove('is-low');
+
+			quizEls.options.innerHTML = '';
+			q.options.forEach((opt, i) => {
+				const btn = document.createElement('button');
+				btn.type = 'button';
+				btn.className = 'pixel-btn quiz-option';
+				btn.dataset.value = opt;
+				const key = document.createElement('span');
+				key.className = 'quiz-option__key';
+				key.textContent = i + 1;
+				const text = document.createElement('span');
+				text.textContent = opt;
+				btn.append(key, text);
+				btn.addEventListener('click', () => answerQuiz(opt, btn));
+				quizEls.options.appendChild(btn);
+			});
+
+			quizEls.picture.innerHTML = '';
+			quizEls.picture.hidden = !q.image;
+			if (!q.image) {
+				beginRound();
+				return;
+			}
+
+			const canvas = document.createElement('canvas');
+			canvas.width = 480;
+			canvas.height = 320;
+			canvas.className = 'quiz-picture__canvas';
+			canvas.setAttribute('role', 'img');
+			canvas.setAttribute('aria-label', 'Mystery critter');
+			const loading = document.createElement('p');
+			loading.className = 'quiz-picture__msg blink';
+			loading.textContent = 'LOADING…';
+			quizEls.picture.append(canvas, loading);
+
+			// Remote images can be slow, so prefer one the page has already downloaded.
+			if (q.pixelate) {
+				const loaded = Array.from(q.entry.card.querySelectorAll('.gallery__img'))
+					.filter(i => i.complete && i.naturalWidth > 0)
+					.map(i => i.getAttribute('src'));
+				if (loaded.length && !loaded.includes(q.image)) q.image = pick(loaded);
+			}
+
+			const next = quiz.questions[quiz.round + 1];
+			if (next && next.image) new Image().src = next.image;
+
+			const img = new Image();
+			const round = quiz.round;
+			let started = false;
+			const isCurrent = () => quizModal.open && quiz.round === round && !quiz.answered;
+			const start = function () {
+				if (started) return;
+				started = true;
+				clearTimeout(quiz.loadTimer);
+				beginRound();
+			};
+			img.onload = function () {
+				// May arrive after the wait below gave up; show it anyway.
+				if (!isCurrent()) return;
+				loading.remove();
+				quiz.img = img;
+				quiz.canvas = canvas;
+				quiz.offscreen = quiz.offscreen || document.createElement('canvas');
+				drawPicture(q.pixelate ? PIXEL_LEVELS[0] : 1);
+				start();
+			};
+			img.onerror = function () {
+				if (!isCurrent()) return;
+				loading.classList.remove('blink');
+				loading.textContent = q.entry.scientific
+					? '📡 SIGNAL LOST // HINT: ' + q.entry.scientific
+					: '📡 SIGNAL LOST';
+				start();
+			};
+			quiz.loadTimer = setTimeout(start, 5000);
+			img.src = q.image;
+		}
+
+		function beginRound() {
+			quiz.locked = false;
+			quiz.startedAt = performance.now();
+			quiz.raf = requestAnimationFrame(quizTick);
+		}
+
+		function quizTick(now) {
+			if (!quiz || quiz.locked) return;
+			const q = quiz.questions[quiz.round];
+			const elapsed = (now - quiz.startedAt) / 1000;
+			const left = Math.max(0, QUIZ_SECONDS - elapsed);
+			quiz.timeLeft = left;
+
+			quizEls.timerFill.style.width = (left / QUIZ_SECONDS * 100) + '%';
+			quizEls.timerFill.classList.toggle('is-low', left < 4);
+
+			const whole = Math.ceil(left);
+			if (whole !== quiz.lastWhole) {
+				quiz.lastWhole = whole;
+				if (whole > 0 && whole <= 3) playTickSound();
+			}
+
+			if (q.pixelate && quiz.img) {
+				const progress = Math.min(1, elapsed / QUIZ_REVEAL_SECONDS);
+				const block = PIXEL_LEVELS[Math.min(PIXEL_LEVELS.length - 1, Math.floor(progress * PIXEL_LEVELS.length))];
+				if (block !== quiz.block) drawPicture(block);
+			}
+
+			if (left <= 0) {
+				answerQuiz(null, null);
+				return;
+			}
+			quiz.raf = requestAnimationFrame(quizTick);
+		}
+
+		function answerQuiz(choice, btn) {
+			if (!quiz || quiz.locked) return;
+			quiz.locked = true;
+			quiz.answered = true;
+			cancelAnimationFrame(quiz.raf);
+
+			const q = quiz.questions[quiz.round];
+			const ok = choice === q.answer;
+
+			quizEls.options.querySelectorAll('.quiz-option').forEach(b => {
+				b.disabled = true;
+				if (b.dataset.value === q.answer) b.classList.add('is-correct');
+				else if (b === btn) b.classList.add('is-wrong');
+			});
+			if (quiz.img) drawPicture(1);
+
+			let msg;
+			if (ok) {
+				quiz.correct++;
+				quiz.streak++;
+				quiz.bestStreak = Math.max(quiz.bestStreak, quiz.streak);
+				const mult = Math.min(quiz.streak, 4);
+				const points = (100 + Math.round((quiz.timeLeft || 0) * 10)) * mult;
+				quiz.score += points;
+				quizEls.score.textContent = quiz.score;
+				msg = `+${points}` + (mult > 1 ? ` // x${mult} COMBO` : '');
+
+				const card = q.entry.card;
+				if (!collectedIds.has(q.entry.id)) {
+					collectedIds.add(q.entry.id);
+					quiz.caught++;
+					saveCollection(card);
+					msg += ' // ★ CAUGHT!';
+				}
+				playCollectSound();
+				const rect = btn.getBoundingClientRect();
+				spawnPixelConfetti(rect.left + rect.width / 2, rect.top + rect.height / 2, 30);
+			} else {
+				quiz.streak = 0;
+				quiz.lives--;
+				renderLives();
+				msg = (choice === null ? 'TIME UP!' : 'MISS!') + ` IT WAS ${q.answer.toUpperCase()}`;
+				playWrongSound();
+				const inner = quizModal.querySelector('.pixel-modal__inner');
+				inner.classList.remove('is-shaking');
+				void inner.offsetWidth; // restart the animation
+				inner.classList.add('is-shaking');
+			}
+
+			quizEls.feedback.textContent = msg;
+			quizEls.feedback.classList.add(ok ? 'is-correct' : 'is-wrong');
+
+			quiz.nextTimer = setTimeout(nextQuizRound, ok ? 1200 : 2000);
+		}
+
+		function nextQuizRound() {
+			quiz.round++;
+			if (quiz.lives <= 0 || quiz.round >= quiz.questions.length) {
+				endQuiz();
+				return;
+			}
+			renderQuestion();
+		}
+
+		function endQuiz() {
+			const prevHi = getHiScore();
+			const isNewHi = quiz.score > prevHi;
+			if (isNewHi) localStorage.setItem(STORAGE_KEY_HISCORE, String(quiz.score));
+
+			quizEls.overTitle.textContent = quiz.lives > 0 ? 'STAGE CLEAR!' : 'GAME OVER';
+			quizEls.finalScore.textContent = quiz.score;
+			quizEls.finalCorrect.textContent = quiz.correct + ' / ' + quiz.questions.length;
+			quizEls.finalStreak.textContent = quiz.bestStreak;
+			quizEls.finalCaught.textContent = quiz.caught;
+			quizEls.newHi.hidden = !isNewHi;
+			showQuizScreen('over');
+			document.getElementById('quiz-again-btn').focus();
+
+			if (quiz.lives > 0 || isNewHi) {
+				playCollectSound();
+				spawnPixelConfetti(window.innerWidth / 2, window.innerHeight / 3, 80);
+			} else {
+				playGameOverSound();
+			}
+		}
+
+		document.querySelectorAll('.btn-open-quiz').forEach(b => b.addEventListener('click', openQuiz));
+		const quizStartBtn = document.getElementById('quiz-start-btn');
+		const quizAgainBtn = document.getElementById('quiz-again-btn');
+		const quizCloseBtn = document.getElementById('quiz-close-btn');
+		if (quizStartBtn) quizStartBtn.addEventListener('click', startQuiz);
+		if (quizAgainBtn) quizAgainBtn.addEventListener('click', startQuiz);
+		if (quizCloseBtn) quizCloseBtn.addEventListener('click', closeQuiz);
+
+		if (quizModal) {
+			// Fires for ESC as well as closeQuiz().
+			quizModal.addEventListener('close', stopQuizTimers);
+			quizModal.addEventListener('click', function (e) {
+				if (e.target === quizModal) closeQuiz();
+			});
+			quizModal.addEventListener('keydown', function (e) {
+				if (quizScreens.play.hidden || !/^[1-4]$/.test(e.key)) return;
+				const btn = quizEls.options.querySelectorAll('.quiz-option')[Number(e.key) - 1];
+				if (btn && !btn.disabled) btn.click();
 			});
 		}
 

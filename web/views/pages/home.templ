@@ -17,6 +17,11 @@ templ Home(sightings []sighting.Sighting) {
 				<p class="arcade-subtitle blink">★ INSERT COIN TO EXPLORE ★</p>
 				<h1 class="arcade-title">ANIMAL SIGHTINGS DEX</h1>
 				<p class="arcade-tagline">RETRO WILDLIFE ARCHIVE // 8-BIT SPECIMEN LOG</p>
+				if len(sightings) > 1 {
+					<button type="button" class="pixel-btn pixel-btn--primary arcade-play-btn btn-open-quiz">
+						▶ PLAY: GUESS THE CRITTER
+					</button>
+				}
 			</div>
 			<!-- Sticky HUD -->
 			<div class="arcade-hud" role="region" aria-label="Game HUD">
@@ -32,6 +37,11 @@ templ Home(sightings []sighting.Sighting) {
 					<span class="hud-pct" id="hud-progress-pct">0%</span>
 				</div>
 				<div class="hud-actions">
+					if len(sightings) > 1 {
+						<button type="button" class="pixel-btn pixel-btn--small pixel-btn--primary btn-open-quiz" aria-label="Play the critter quiz">
+							<span>🎮</span> <span>QUIZ</span>
+						</button>
+					}
 					<button type="button" id="btn-sound-toggle" class="pixel-btn pixel-btn--small" aria-label="Toggle retro sound effects">
 						<span id="sound-icon">🔊</span> <span id="sound-text">SFX ON</span>
 					</button>
@@ -41,7 +51,6 @@ templ Home(sightings []sighting.Sighting) {
 				</div>
 			</div>
 		</header>
-
 		<!-- Arcade Controls: Search & Country Filter -->
 		<section class="arcade-controls" aria-label="Filters and Search">
 			<div class="control-group search-group">
@@ -54,7 +63,6 @@ templ Home(sightings []sighting.Sighting) {
 					autocomplete="off"
 				/>
 			</div>
-
 			<div class="control-group filter-group">
 				<label for="country-filter" class="pixel-label">🌍 COUNTRY FILTER:</label>
 				<select id="country-filter" class="pixel-select">
@@ -64,7 +72,6 @@ templ Home(sightings []sighting.Sighting) {
 					}
 				</select>
 			</div>
-
 			<div class="control-group filter-group">
 				<label for="collection-filter" class="pixel-label">★ DEX STATUS:</label>
 				<select id="collection-filter" class="pixel-select">
@@ -73,20 +80,17 @@ templ Home(sightings []sighting.Sighting) {
 					<option value="UNCOLLECTED">UNCOLLECTED ONLY</option>
 				</select>
 			</div>
-
 			<div class="control-actions">
 				<button type="button" id="btn-reset-filters" class="pixel-btn pixel-btn--warning" aria-label="Reset all filters">
 					RESET
 				</button>
 			</div>
 		</section>
-
 		<!-- Active Count and Grid Area -->
 		<div class="arcade-status-bar" aria-live="polite">
 			<span>SHOWING: <strong id="visible-count">{ strconv.Itoa(len(sightings)) }</strong> / { strconv.Itoa(len(sightings)) } SPECIMENS</span>
 			<span id="filter-status-text" class="status-badge">READY PLAYER 1</span>
 		</div>
-
 		if len(sightings) == 0 {
 			<div class="arcade-empty-box">
 				<p class="empty-title">GAME OVER // NO SIGHTINGS INGESTED</p>
@@ -105,7 +109,6 @@ templ Home(sightings []sighting.Sighting) {
 				<p>Try changing your search terms or resetting filters.</p>
 			</div>
 		}
-
 		<!-- Retro Profile / Specimen Modal Dialog -->
 		<dialog id="specimen-modal" class="pixel-modal" aria-labelledby="modal-title">
 			<div class="pixel-modal__inner">
@@ -126,6 +129,56 @@ templ Home(sightings []sighting.Sighting) {
 						CLOSE
 					</button>
 				</footer>
+			</div>
+		</dialog>
+		<!-- Critter Quiz Mini-Game. Screens are swapped by app.js. -->
+		<dialog id="quiz-modal" class="pixel-modal quiz-modal" aria-labelledby="quiz-title">
+			<div class="pixel-modal__inner">
+				<header class="pixel-modal__header">
+					<h2 id="quiz-title" class="pixel-modal__title">GUESS THE CRITTER</h2>
+					<button type="button" class="pixel-btn pixel-btn--danger" id="quiz-close-btn" aria-label="Quit quiz">
+						✖ ESC
+					</button>
+				</header>
+				<section class="quiz-screen" id="quiz-start" aria-label="Quiz start">
+					<p class="quiz-attract blink">PRESS START</p>
+					<ul class="quiz-rules">
+						<li>▶ 10 ROUNDS. 3 LIVES. 15 SECONDS EACH.</li>
+						<li>▶ NAME THE ANIMAL, OR WHERE IT WAS SPOTTED.</li>
+						<li>▶ FASTER ANSWERS SCORE MORE. STREAKS MULTIPLY.</li>
+						<li>▶ A CORRECT ANSWER CATCHES THE SPECIMEN FOR YOUR DEX.</li>
+						<li>▶ KEYS 1-4 TO ANSWER.</li>
+					</ul>
+					<p class="quiz-hiscore">HI-SCORE: <span id="quiz-hiscore">0</span></p>
+					<button type="button" class="pixel-btn pixel-btn--primary quiz-big-btn" id="quiz-start-btn">▶ START</button>
+				</section>
+				<section class="quiz-screen" id="quiz-play" aria-label="Quiz round" hidden>
+					<div class="quiz-hud">
+						<span>RND <strong id="quiz-round">1</strong>/<span id="quiz-rounds">10</span></span>
+						<span class="quiz-lives" id="quiz-lives" aria-label="Lives">♥♥♥</span>
+						<span>SCORE <strong id="quiz-score">0</strong></span>
+					</div>
+					<div class="quiz-timer" aria-hidden="true"><div class="quiz-timer__fill" id="quiz-timer-fill"></div></div>
+					<p class="quiz-question" id="quiz-question" aria-live="polite"></p>
+					<div class="quiz-picture" id="quiz-picture"></div>
+					<div class="quiz-options" id="quiz-options"></div>
+					<p class="quiz-feedback" id="quiz-feedback" aria-live="assertive"></p>
+				</section>
+				<section class="quiz-screen" id="quiz-over" aria-label="Quiz results" hidden>
+					<p class="quiz-gameover" id="quiz-over-title">GAME OVER</p>
+					<dl class="quiz-results">
+						<dt>SCORE</dt>
+						<dd id="quiz-final-score">0</dd>
+						<dt>CORRECT</dt>
+						<dd id="quiz-final-correct">0</dd>
+						<dt>BEST STREAK</dt>
+						<dd id="quiz-final-streak">0</dd>
+						<dt>CAUGHT</dt>
+						<dd id="quiz-final-caught">0</dd>
+					</dl>
+					<p class="quiz-newhi blink" id="quiz-newhi" hidden>★ NEW HI-SCORE ★</p>
+					<button type="button" class="pixel-btn pixel-btn--primary quiz-big-btn" id="quiz-again-btn">↻ PLAY AGAIN</button>
+				</section>
 			</div>
 		</dialog>
 	}
