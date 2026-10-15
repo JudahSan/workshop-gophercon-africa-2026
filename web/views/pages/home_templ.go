@@ -9,6 +9,8 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
+	"slices"
+	"strconv"
 	"workshop/internal/domain/sighting"
 	"workshop/web/views/components"
 	"workshop/web/views/layout"
@@ -47,35 +49,143 @@ func Home(sightings []sighting.Sighting) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<h1>Sightings</h1>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<header class=\"arcade-header\"><div class=\"arcade-title-box\"><p class=\"arcade-subtitle blink\">★ INSERT COIN TO EXPLORE ★</p><h1 class=\"arcade-title\">ANIMAL SIGHTINGS DEX</h1><p class=\"arcade-tagline\">RETRO WILDLIFE ARCHIVE // 8-BIT SPECIMEN LOG</p>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			if len(sightings) > 1 {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<button type=\"button\" class=\"pixel-btn pixel-btn--primary arcade-play-btn btn-open-quiz\">▶ PLAY: GUESS THE CRITTER</button>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div><!-- Sticky HUD --><div class=\"arcade-hud\" role=\"region\" aria-label=\"Game HUD\"><div class=\"hud-item hud-score\"><span class=\"hud-label\">COLLECTED:</span> <span class=\"hud-value\"><span id=\"hud-collected-count\">0</span> / <span id=\"hud-total-count\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var3 string
+			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(len(sightings)))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/pages/home.templ`, Line: 30, Col: 128}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</span></span></div><div class=\"hud-item hud-progress\"><span class=\"hud-label\">PROGRESS:</span><div class=\"hud-bar-outer\" role=\"progressbar\" aria-valuenow=\"0\" aria-valuemin=\"0\" aria-valuemax=\"100\" id=\"hud-progress-bar\"><div class=\"hud-bar-inner\" id=\"hud-progress-fill\" style=\"width: 0%;\"></div></div><span class=\"hud-pct\" id=\"hud-progress-pct\">0%</span></div><div class=\"hud-actions\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			if len(sightings) > 1 {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<button type=\"button\" class=\"pixel-btn pixel-btn--small pixel-btn--primary btn-open-quiz\" aria-label=\"Play the critter quiz\"><span>🎮</span> <span>QUIZ</span></button> ")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<button type=\"button\" id=\"btn-sound-toggle\" class=\"pixel-btn pixel-btn--small\" aria-label=\"Toggle retro sound effects\"><span id=\"sound-icon\">🔊</span> <span id=\"sound-text\">SFX ON</span></button> <button type=\"button\" id=\"btn-crt-toggle\" class=\"pixel-btn pixel-btn--small\" aria-label=\"Toggle CRT screen overlay\"><span>📺</span> <span id=\"crt-text\">CRT ON</span></button></div></div></header><!-- Arcade Controls: Search & Country Filter --> <section class=\"arcade-controls\" aria-label=\"Filters and Search\"><div class=\"control-group search-group\"><label for=\"search-input\" class=\"pixel-label\">🔍 SEARCH SPECIMEN:</label> <input type=\"search\" id=\"search-input\" class=\"pixel-input\" placeholder=\"Enter species, country, rank...\" autocomplete=\"off\"></div><div class=\"control-group filter-group\"><label for=\"country-filter\" class=\"pixel-label\">🌍 COUNTRY FILTER:</label> <select id=\"country-filter\" class=\"pixel-select\"><option value=\"ALL\">ALL COUNTRIES (")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var4 string
+			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(len(sightings)))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/pages/home.templ`, Line: 69, Col: 70}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, ")</option> ")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			for _, c := range uniqueCountries(sightings) {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<option value=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var5 string
+				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(c)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/pages/home.templ`, Line: 71, Col: 23}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var6 string
+				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(c)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/pages/home.templ`, Line: 71, Col: 29}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</option>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</select></div><div class=\"control-group filter-group\"><label for=\"collection-filter\" class=\"pixel-label\">★ DEX STATUS:</label> <select id=\"collection-filter\" class=\"pixel-select\"><option value=\"ALL\">ALL SPECIMENS</option> <option value=\"COLLECTED\">COLLECTED ONLY</option> <option value=\"UNCOLLECTED\">UNCOLLECTED ONLY</option></select></div><div class=\"control-actions\"><button type=\"button\" id=\"btn-reset-filters\" class=\"pixel-btn pixel-btn--warning\" aria-label=\"Reset all filters\">RESET</button></div></section><!-- Active Count and Grid Area --> <div class=\"arcade-status-bar\" aria-live=\"polite\"><span>SHOWING: <strong id=\"visible-count\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var7 string
+			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(len(sightings)))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/pages/home.templ`, Line: 91, Col: 75}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</strong> / ")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var8 string
+			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(len(sightings)))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/pages/home.templ`, Line: 91, Col: 119}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, " SPECIMENS</span> <span id=\"filter-status-text\" class=\"status-badge\">READY PLAYER 1</span></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if len(sightings) == 0 {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<p>No sightings have been ingested yet.</p>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<div class=\"arcade-empty-box\"><p class=\"empty-title\">GAME OVER // NO SIGHTINGS INGESTED</p><p>Connect GBIF data feed to populate the specimen database.</p></div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			} else {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<p>Total: ")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var3 string
-				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(len(sightings))
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/pages/home.templ`, Line: 17, Col: 29}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</p><ul class=\"sightings\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<ul class=\"sightings-grid\" id=\"sightings-list\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				for _, s := range sightings {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<li>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<li class=\"sighting-item\" data-id=\"")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var9 string
+					templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(s.ID.String())
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/pages/home.templ`, Line: 102, Col: 54}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -83,26 +193,44 @@ func Home(sightings []sighting.Sighting) templ.Component {
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</li>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</li>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</ul>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</ul><div id=\"no-results-msg\" class=\"arcade-empty-box\" style=\"display: none;\"><p class=\"empty-title\">👾 NO SPECIMENS FOUND 👾</p><p>Try changing your search terms or resetting filters.</p></div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, " <!-- Retro Profile / Specimen Modal Dialog --> <dialog id=\"specimen-modal\" class=\"pixel-modal\" aria-labelledby=\"modal-title\"><div class=\"pixel-modal__inner\"><header class=\"pixel-modal__header\"><h2 id=\"modal-title\" class=\"pixel-modal__title\">SPECIMEN DOSSIER</h2><button type=\"button\" class=\"pixel-btn pixel-btn--danger pixel-modal__close\" id=\"modal-close-btn\" aria-label=\"Close Dossier\">✖ ESC</button></header><div class=\"pixel-modal__body\" id=\"modal-content\"><!-- Filled dynamically by app.js --></div><footer class=\"pixel-modal__footer\"><button type=\"button\" class=\"pixel-btn pixel-btn--primary\" id=\"modal-collect-btn\">★ TOGGLE COLLECTION</button> <button type=\"button\" class=\"pixel-btn\" id=\"modal-close-footer-btn\">CLOSE</button></footer></div></dialog><!-- Critter Quiz Mini-Game. Screens are swapped by app.js. --> <dialog id=\"quiz-modal\" class=\"pixel-modal quiz-modal\" aria-labelledby=\"quiz-title\"><div class=\"pixel-modal__inner\"><header class=\"pixel-modal__header\"><h2 id=\"quiz-title\" class=\"pixel-modal__title\">GUESS THE CRITTER</h2><button type=\"button\" class=\"pixel-btn pixel-btn--danger\" id=\"quiz-close-btn\" aria-label=\"Quit quiz\">✖ ESC</button></header><section class=\"quiz-screen\" id=\"quiz-start\" aria-label=\"Quiz start\"><p class=\"quiz-attract blink\">PRESS START</p><ul class=\"quiz-rules\"><li>▶ 10 ROUNDS. 3 LIVES. 15 SECONDS EACH.</li><li>▶ NAME THE ANIMAL, OR WHERE IT WAS SPOTTED.</li><li>▶ FASTER ANSWERS SCORE MORE. STREAKS MULTIPLY.</li><li>▶ A CORRECT ANSWER CATCHES THE SPECIMEN FOR YOUR DEX.</li><li>▶ KEYS 1-4 TO ANSWER.</li></ul><p class=\"quiz-hiscore\">HI-SCORE: <span id=\"quiz-hiscore\">0</span></p><button type=\"button\" class=\"pixel-btn pixel-btn--primary quiz-big-btn\" id=\"quiz-start-btn\">▶ START</button></section><section class=\"quiz-screen\" id=\"quiz-play\" aria-label=\"Quiz round\" hidden><div class=\"quiz-hud\"><span>RND <strong id=\"quiz-round\">1</strong>/<span id=\"quiz-rounds\">10</span></span> <span class=\"quiz-lives\" id=\"quiz-lives\" aria-label=\"Lives\">♥♥♥</span> <span>SCORE <strong id=\"quiz-score\">0</strong></span></div><div class=\"quiz-timer\" aria-hidden=\"true\"><div class=\"quiz-timer__fill\" id=\"quiz-timer-fill\"></div></div><p class=\"quiz-question\" id=\"quiz-question\" aria-live=\"polite\"></p><div class=\"quiz-picture\" id=\"quiz-picture\"></div><div class=\"quiz-options\" id=\"quiz-options\"></div><p class=\"quiz-feedback\" id=\"quiz-feedback\" aria-live=\"assertive\"></p></section><section class=\"quiz-screen\" id=\"quiz-over\" aria-label=\"Quiz results\" hidden><p class=\"quiz-gameover\" id=\"quiz-over-title\">GAME OVER</p><dl class=\"quiz-results\"><dt>SCORE</dt><dd id=\"quiz-final-score\">0</dd><dt>CORRECT</dt><dd id=\"quiz-final-correct\">0</dd><dt>BEST STREAK</dt><dd id=\"quiz-final-streak\">0</dd><dt>CAUGHT</dt><dd id=\"quiz-final-caught\">0</dd></dl><p class=\"quiz-newhi blink\" id=\"quiz-newhi\" hidden>★ NEW HI-SCORE ★</p><button type=\"button\" class=\"pixel-btn pixel-btn--primary quiz-big-btn\" id=\"quiz-again-btn\">↻ PLAY AGAIN</button></section></div></dialog>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
 			return nil
 		})
 		templ_7745c5c3_Err = layout.Base(layout.BaseProps{
-			Title: "Sightings",
+			Title: "RETRO ARCADE // ANIMAL SIGHTINGS DEX",
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		return nil
 	})
+}
+
+func uniqueCountries(sightings []sighting.Sighting) []string {
+	var countries []string
+	seen := make(map[string]bool)
+	for _, s := range sightings {
+		c := s.Location.Country
+		if c != "" && !seen[c] {
+			seen[c] = true
+			countries = append(countries, c)
+		}
+	}
+	slices.Sort(countries)
+	return countries
 }
 
 var _ = templruntime.GeneratedTemplate

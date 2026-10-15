@@ -2,31 +2,66 @@ package components
 
 import (
 	"cmp"
+	"fmt"
 	"workshop/internal/domain/sighting"
 )
 
+// Gallery renders a sighting's media as a single-frame carousel. The track
+// scroll-snaps, so swiping works without JS; app.js wires the arrows, the
+// counter and the thumbnail strip.
 templ Gallery(items []sighting.Media) {
 	if len(items) == 0 {
-		<p class="gallery__empty">No media recorded.</p>
+		<div class="gallery__pixel-placeholder">
+			<span class="placeholder-icon">👾</span>
+			<p class="gallery__empty">NO VISUAL FEED</p>
+		</div>
 	} else {
-		<ul class="gallery">
-			for _, m := range items {
-				<!-- Items -->
-				<li class="gallery__item">
-					if m.Type == "StillImage" {
-						<img src={ m.URL } alt={ altText(m) } loading="lazy"/>
-					} else {
-						<a href={ templ.URL(m.URL) } rel="noopener">{ altText(m) }</a>
+		<div class="carousel" data-carousel>
+			<ul class="carousel__track" tabindex="0" aria-label="Specimen media">
+				for i, m := range items {
+					<li class="carousel__slide" aria-label={ fmt.Sprintf("%d of %d", i+1, len(items)) }>
+						if m.Type == "StillImage" {
+							<div class="gallery__img-frame">
+								<img src={ m.URL } alt={ altText(m) } loading="lazy" decoding="async" class="gallery__img"/>
+							</div>
+						} else {
+							<div class="gallery__img-frame gallery__img-frame--audio">
+								<a href={ templ.URL(m.URL) } rel="noopener" target="_blank" class="pixel-link">
+									♪ [AUDIO FEED: { altText(m) }]
+								</a>
+							</div>
+						}
+						if m.Creator != "" {
+							<p class="gallery__credit">BY: { m.Creator }</p>
+						}
+					</li>
+				}
+			</ul>
+			if len(items) > 1 {
+				<button type="button" class="carousel__nav carousel__nav--prev" data-carousel-prev aria-label="Previous image">◀</button>
+				<button type="button" class="carousel__nav carousel__nav--next" data-carousel-next aria-label="Next image">▶</button>
+				<span class="carousel__counter" data-carousel-counter>{ fmt.Sprintf("1/%d", len(items)) }</span>
+				<div class="carousel__thumbs" role="group" aria-label="Choose image">
+					for i, m := range items {
+						<button
+							type="button"
+							class={ "carousel__thumb", templ.KV("is-active", i == 0) }
+							data-carousel-goto={ fmt.Sprint(i) }
+							aria-label={ fmt.Sprintf("Show image %d", i+1) }
+						>
+							if m.Type == "StillImage" {
+								<img src={ m.URL } alt="" loading="lazy"/>
+							} else {
+								<span>♪</span>
+							}
+						</button>
 					}
-					if m.Creator != "" {
-						<figcaption class="gallery__credit">{ m.Creator }</figcaption>
-					}
-				</li>
+				</div>
 			}
-		</ul>
+		</div>
 	}
 }
 
 func altText(m sighting.Media) string {
-	return cmp.Or(m.Title, m.Description, "Sighting media")
+	return cmp.Or(m.Title, m.Description, "Specimen visual")
 }
