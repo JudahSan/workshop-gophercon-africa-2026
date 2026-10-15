@@ -51,7 +51,7 @@ test-race: # Run all tests with race
 .PHONY: test-race
 
 load: # Load test the home page for 10 seconds while make web runs
-	go tool hey -z 10s -c 10 http://localhost:8080/
+	go tool hey -z 10s -c 10 http://localhost:8091/
 .PHONY: load
 
 # -j2 runs the CPU profile and the load at the same time.

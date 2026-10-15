@@ -9,6 +9,8 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
+	"slices"
+	"strconv"
 	"workshop/internal/domain/sighting"
 	"workshop/web/views/components"
 	"workshop/web/views/layout"
@@ -47,35 +49,123 @@ func Home(sightings []sighting.Sighting) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<h1>Sightings</h1>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<header class=\"arcade-header\"><div class=\"arcade-title-box\"><p class=\"arcade-subtitle blink\">★ INSERT COIN TO EXPLORE ★</p><h1 class=\"arcade-title\">ANIMAL SIGHTINGS DEX</h1><p class=\"arcade-tagline\">RETRO WILDLIFE ARCHIVE // 8-BIT SPECIMEN LOG</p></div><!-- Sticky HUD --><div class=\"arcade-hud\" role=\"region\" aria-label=\"Game HUD\"><div class=\"hud-item hud-score\"><span class=\"hud-label\">COLLECTED:</span> <span class=\"hud-value\"><span id=\"hud-collected-count\">0</span> / <span id=\"hud-total-count\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var3 string
+			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(len(sightings)))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/pages/home.templ`, Line: 25, Col: 128}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</span></span></div><div class=\"hud-item hud-progress\"><span class=\"hud-label\">PROGRESS:</span><div class=\"hud-bar-outer\" role=\"progressbar\" aria-valuenow=\"0\" aria-valuemin=\"0\" aria-valuemax=\"100\" id=\"hud-progress-bar\"><div class=\"hud-bar-inner\" id=\"hud-progress-fill\" style=\"width: 0%;\"></div></div><span class=\"hud-pct\" id=\"hud-progress-pct\">0%</span></div><div class=\"hud-actions\"><button type=\"button\" id=\"btn-sound-toggle\" class=\"pixel-btn pixel-btn--small\" aria-label=\"Toggle retro sound effects\"><span id=\"sound-icon\">🔊</span> <span id=\"sound-text\">SFX ON</span></button> <button type=\"button\" id=\"btn-crt-toggle\" class=\"pixel-btn pixel-btn--small\" aria-label=\"Toggle CRT screen overlay\"><span>📺</span> <span id=\"crt-text\">CRT ON</span></button></div></div></header><!-- Arcade Controls: Search & Country Filter --> <section class=\"arcade-controls\" aria-label=\"Filters and Search\"><div class=\"control-group search-group\"><label for=\"search-input\" class=\"pixel-label\">🔍 SEARCH SPECIMEN:</label> <input type=\"search\" id=\"search-input\" class=\"pixel-input\" placeholder=\"Enter species, country, rank...\" autocomplete=\"off\"></div><div class=\"control-group filter-group\"><label for=\"country-filter\" class=\"pixel-label\">🌍 COUNTRY FILTER:</label> <select id=\"country-filter\" class=\"pixel-select\"><option value=\"ALL\">ALL COUNTRIES (")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var4 string
+			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(len(sightings)))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/pages/home.templ`, Line: 61, Col: 70}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, ")</option> ")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			for _, c := range uniqueCountries(sightings) {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<option value=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var5 string
+				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(c)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/pages/home.templ`, Line: 63, Col: 23}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var6 string
+				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(c)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/pages/home.templ`, Line: 63, Col: 29}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</option>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</select></div><div class=\"control-group filter-group\"><label for=\"collection-filter\" class=\"pixel-label\">★ DEX STATUS:</label> <select id=\"collection-filter\" class=\"pixel-select\"><option value=\"ALL\">ALL SPECIMENS</option> <option value=\"COLLECTED\">COLLECTED ONLY</option> <option value=\"UNCOLLECTED\">UNCOLLECTED ONLY</option></select></div><div class=\"control-actions\"><button type=\"button\" id=\"btn-reset-filters\" class=\"pixel-btn pixel-btn--warning\" aria-label=\"Reset all filters\">RESET</button></div></section><!-- Active Count and Grid Area --> <div class=\"arcade-status-bar\" aria-live=\"polite\"><span>SHOWING: <strong id=\"visible-count\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var7 string
+			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(len(sightings)))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/pages/home.templ`, Line: 86, Col: 75}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</strong> / ")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var8 string
+			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(len(sightings)))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/pages/home.templ`, Line: 86, Col: 119}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, " SPECIMENS</span> <span id=\"filter-status-text\" class=\"status-badge\">READY PLAYER 1</span></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if len(sightings) == 0 {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<p>No sightings have been ingested yet.</p>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<div class=\"arcade-empty-box\"><p class=\"empty-title\">GAME OVER // NO SIGHTINGS INGESTED</p><p>Connect GBIF data feed to populate the specimen database.</p></div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			} else {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<p>Total: ")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var3 string
-				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(len(sightings))
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/pages/home.templ`, Line: 17, Col: 29}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</p><ul class=\"sightings\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<ul class=\"sightings-grid\" id=\"sightings-list\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				for _, s := range sightings {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<li>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<li class=\"sighting-item\" data-id=\"")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var9 string
+					templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(s.ID.String())
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/pages/home.templ`, Line: 98, Col: 54}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -83,26 +173,44 @@ func Home(sightings []sighting.Sighting) templ.Component {
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</li>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</li>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</ul>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</ul><div id=\"no-results-msg\" class=\"arcade-empty-box\" style=\"display: none;\"><p class=\"empty-title\">👾 NO SPECIMENS FOUND 👾</p><p>Try changing your search terms or resetting filters.</p></div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, " <!-- Retro Profile / Specimen Modal Dialog --> <dialog id=\"specimen-modal\" class=\"pixel-modal\" aria-labelledby=\"modal-title\"><div class=\"pixel-modal__inner\"><header class=\"pixel-modal__header\"><h2 id=\"modal-title\" class=\"pixel-modal__title\">SPECIMEN DOSSIER</h2><button type=\"button\" class=\"pixel-btn pixel-btn--danger pixel-modal__close\" id=\"modal-close-btn\" aria-label=\"Close Dossier\">✖ ESC</button></header><div class=\"pixel-modal__body\" id=\"modal-content\"><!-- Filled dynamically by app.js --></div><footer class=\"pixel-modal__footer\"><button type=\"button\" class=\"pixel-btn pixel-btn--primary\" id=\"modal-collect-btn\">★ TOGGLE COLLECTION</button> <button type=\"button\" class=\"pixel-btn\" id=\"modal-close-footer-btn\">CLOSE</button></footer></div></dialog>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
 			return nil
 		})
 		templ_7745c5c3_Err = layout.Base(layout.BaseProps{
-			Title: "Sightings",
+			Title: "RETRO ARCADE // ANIMAL SIGHTINGS DEX",
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		return nil
 	})
+}
+
+func uniqueCountries(sightings []sighting.Sighting) []string {
+	var countries []string
+	seen := make(map[string]bool)
+	for _, s := range sightings {
+		c := s.Location.Country
+		if c != "" && !seen[c] {
+			seen[c] = true
+			countries = append(countries, c)
+		}
+	}
+	slices.Sort(countries)
+	return countries
 }
 
 var _ = templruntime.GeneratedTemplate

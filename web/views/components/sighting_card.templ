@@ -11,43 +11,125 @@ import (
 )
 
 templ SightingCard(s sighting.Sighting) {
-	<article class="card">
+	<article
+		class="card pixel-card"
+		data-id={ s.ID.String() }
+		data-name={ displayName(s.Species) }
+		data-scientific={ s.Species.ScientificName }
+		data-country={ s.Location.Country }
+		data-country-code={ string(s.Location.CountryCode) }
+		data-locality={ s.Location.Locality }
+		data-state={ s.Location.StateProvince }
+		data-place={ place(s.Location) }
+		data-seen={ s.HappenedAt.Format("02 Jan 2006") }
+		data-recorded-by={ s.RecordedBy }
+		data-remarks={ s.Remarks }
+		data-ref-url={ s.ReferenceURL }
+		data-kingdom={ s.Species.Kingdom }
+		data-phylum={ s.Species.Phylum }
+		data-class={ s.Species.Class }
+		data-order={ s.Species.Order }
+		data-family={ s.Species.Family }
+		data-genus={ s.Species.Genus }
+		data-species-name={ s.Species.Species }
+		data-temp={ fmt.Sprintf("%.1f°C", s.Weather.Temperature.Actual) }
+		data-wind={ fmt.Sprintf("%.1f km/h", s.Weather.Wind.Speed) }
+		data-humidity={ fmt.Sprintf("%d%%", s.Weather.Humidity) }
+		data-condition={ s.Weather.Condition.Description }
+		data-lat={ fmt.Sprintf("%.4f", s.Location.Latitude) }
+		data-lon={ fmt.Sprintf("%.4f", s.Location.Longitude) }
+		data-elevation={ elevationStr(s.Location.ElevationInMetres) }
+		data-count={ countStr(s.IndividualCount) }
+		data-image-url={ firstImageURL(s.Media) }
+		data-image-creator={ firstImageCreator(s.Media) }
+	>
+		<!-- Card Top Badge -->
+		<div class="card__top-bar">
+			<span class="card__id-badge">ID: #{ shortID(s.ID.String()) }</span>
+			if s.Location.Country != "" {
+				<span class="card__country-badge">{ s.Location.Country }</span>
+			}
+			<span class="card__collect-indicator" aria-label="Collection status">UNCLAIMED</span>
+		</div>
+
 		<!-- Header -->
 		<header class="card__header">
-			<h2>{ displayName(s.Species) }</h2>
+			<h2 class="card__title">{ displayName(s.Species) }</h2>
 			if s.Species.ScientificName != "" {
 				<p class="card__scientific">{ s.Species.ScientificName }</p>
 			}
 		</header>
-		<!-- Meta -->
-		<dl class="card__meta">
-			<dt>Seen</dt>
-			<dd>{ s.HappenedAt.Format("2 January 2006") }</dd>
-			<dt>Where</dt>
-			<dd>{ place(s.Location) }</dd>
-			if s.IndividualCount != nil {
-				<dt>Count</dt>
-				<dd>{ individuals(*s.IndividualCount) }</dd>
-			}
-			if s.RecordedBy != "" {
-				<dt>Recorded by</dt>
-				<dd>{ s.RecordedBy }</dd>
-			}
-		</dl>
-		<!-- Gallery -->
+
+		<!-- Visual Media / Sprite Preview -->
 		<div class="card__gallery">
 			@Gallery(s.Media)
 		</div>
+
+		<!-- Stat Bars (Retro RPG Style) -->
+		<div class="card__stats" aria-label="Specimen stats">
+			<div class="stat-row">
+				<span class="stat-name">THERMAL</span>
+				<div class="stat-bar" role="meter" aria-label="Temperature" aria-valuenow={ fmt.Sprintf("%.0f", s.Weather.Temperature.Actual) }>
+					<div class="stat-bar__fill stat-bar__fill--temp" style={ fmt.Sprintf("width: %s;", tempPercent(s.Weather.Temperature.Actual)) }></div>
+				</div>
+				<span class="stat-val">{ fmt.Sprintf("%.1f°C", s.Weather.Temperature.Actual) }</span>
+			</div>
+			<div class="stat-row">
+				<span class="stat-name">WIND</span>
+				<div class="stat-bar" role="meter" aria-label="Wind speed" aria-valuenow={ fmt.Sprintf("%.0f", s.Weather.Wind.Speed) }>
+					<div class="stat-bar__fill stat-bar__fill--wind" style={ fmt.Sprintf("width: %s;", windPercent(s.Weather.Wind.Speed)) }></div>
+				</div>
+				<span class="stat-val">{ fmt.Sprintf("%.1f kph", s.Weather.Wind.Speed) }</span>
+			</div>
+			<div class="stat-row">
+				<span class="stat-name">HUMID</span>
+				<div class="stat-bar" role="meter" aria-label="Humidity" aria-valuenow={ fmt.Sprintf("%d", s.Weather.Humidity) }>
+					<div class="stat-bar__fill stat-bar__fill--humidity" style={ fmt.Sprintf("width: %s;", humidityPercent(s.Weather.Humidity)) }></div>
+				</div>
+				<span class="stat-val">{ fmt.Sprintf("%d%%", s.Weather.Humidity) }</span>
+			</div>
+		</div>
+
+		<!-- Meta Information -->
+		<dl class="card__meta">
+			<dt>DATE</dt>
+			<dd>{ s.HappenedAt.Format("02 Jan 2006") }</dd>
+			<dt>LOC</dt>
+			<dd>{ place(s.Location) }</dd>
+			if s.IndividualCount != nil {
+				<dt>COUNT</dt>
+				<dd>{ individuals(*s.IndividualCount) }</dd>
+			}
+			if s.Species.Class != "" {
+				<dt>CLASS</dt>
+				<dd>{ s.Species.Class }</dd>
+			}
+		</dl>
+
+		<!-- Card Action Buttons -->
+		<footer class="card__actions">
+			<button
+				type="button"
+				class="pixel-btn pixel-btn--collect btn-collect-toggle"
+				aria-label={ fmt.Sprintf("Collect specimen %s", displayName(s.Species)) }
+			>
+				<span class="collect-icon">★</span> <span class="collect-text">COLLECT</span>
+			</button>
+			<button
+				type="button"
+				class="pixel-btn pixel-btn--profile btn-open-modal"
+				aria-label={ fmt.Sprintf("View dossier for %s", displayName(s.Species)) }
+			>
+				<span>▶</span> DOSSIER
+			</button>
+		</footer>
 	</article>
 }
 
-// displayName prefers the name a reader would recognise, falling back
-// through the taxonomy as GBIF records thin out.
 func displayName(sp species.Species) string {
 	return cmp.Or(sp.VernacularName, sp.CanonicalName, sp.ScientificName, "Unknown species")
 }
 
-// place joins whichever parts of the location GBIF supplied.
 func place(l sighting.Location) string {
 	parts := slices.DeleteFunc(
 		[]string{l.Locality, l.StateProvince, l.Country},
@@ -56,10 +138,83 @@ func place(l sighting.Location) string {
 	return cmp.Or(strings.Join(parts, ", "), "Location unknown")
 }
 
-// individuals renders how many animals were seen in a single sighting.
 func individuals(n int) string {
 	if n == 1 {
-		return "1 individual"
+		return "1 specimen"
 	}
-	return fmt.Sprintf("%d individuals", n)
+	return fmt.Sprintf("%d specimens", n)
+}
+
+func shortID(id string) string {
+	if len(id) > 6 {
+		return id[:6]
+	}
+	return id
+}
+
+func elevationStr(e *float64) string {
+	if e == nil {
+		return "N/A"
+	}
+	return fmt.Sprintf("%.0f m", *e)
+}
+
+func countStr(c *int) string {
+	if c == nil {
+		return "1"
+	}
+	return fmt.Sprintf("%d", *c)
+}
+
+func firstImageURL(media []sighting.Media) string {
+	for _, m := range media {
+		if m.Type == "StillImage" && m.URL != "" {
+			return m.URL
+		}
+	}
+	if len(media) > 0 {
+		return media[0].URL
+	}
+	return ""
+}
+
+func firstImageCreator(media []sighting.Media) string {
+	for _, m := range media {
+		if m.Creator != "" {
+			return m.Creator
+		}
+	}
+	return ""
+}
+
+func tempPercent(actual float64) string {
+	p := int((actual + 10.0) / 50.0 * 100.0)
+	if p < 5 {
+		p = 5
+	}
+	if p > 100 {
+		p = 100
+	}
+	return fmt.Sprintf("%d%%", p)
+}
+
+func windPercent(speed float64) string {
+	p := int(speed / 80.0 * 100.0)
+	if p < 5 {
+		p = 5
+	}
+	if p > 100 {
+		p = 100
+	}
+	return fmt.Sprintf("%d%%", p)
+}
+
+func humidityPercent(hum int) string {
+	if hum < 5 {
+		hum = 5
+	}
+	if hum > 100 {
+		hum = 100
+	}
+	return fmt.Sprintf("%d%%", hum)
 }

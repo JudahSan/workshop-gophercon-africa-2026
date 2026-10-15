@@ -46,7 +46,7 @@ func Base(props BaseProps) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><link rel=\"stylesheet\" href=\"/assets/css/app.css\"></head><body><main class=\"container\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><link rel=\"preconnect\" href=\"https://fonts.googleapis.com\"><link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin><link href=\"https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap\" rel=\"stylesheet\"><link rel=\"stylesheet\" href=\"/assets/css/app.css\"></head><body><div class=\"crt-overlay\" aria-hidden=\"true\" id=\"crt-overlay\"></div><div class=\"scanlines\" aria-hidden=\"true\" id=\"scanlines\"></div><canvas id=\"confetti-canvas\" class=\"confetti-canvas\" aria-hidden=\"true\"></canvas><main class=\"container\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

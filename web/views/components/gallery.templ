@@ -7,19 +7,25 @@ import (
 
 templ Gallery(items []sighting.Media) {
 	if len(items) == 0 {
-		<p class="gallery__empty">No media recorded.</p>
+		<div class="gallery__pixel-placeholder">
+			<span class="placeholder-icon">👾</span>
+			<p class="gallery__empty">NO VISUAL FEED</p>
+		</div>
 	} else {
 		<ul class="gallery">
 			for _, m := range items {
-				<!-- Items -->
 				<li class="gallery__item">
 					if m.Type == "StillImage" {
-						<img src={ m.URL } alt={ altText(m) } loading="lazy"/>
+						<div class="gallery__img-frame">
+							<img src={ m.URL } alt={ altText(m) } loading="lazy" class="gallery__img"/>
+						</div>
 					} else {
-						<a href={ templ.URL(m.URL) } rel="noopener">{ altText(m) }</a>
+						<a href={ templ.URL(m.URL) } rel="noopener" target="_blank" class="pixel-link">
+							[AUDIO FEED: { altText(m) }]
+						</a>
 					}
 					if m.Creator != "" {
-						<figcaption class="gallery__credit">{ m.Creator }</figcaption>
+						<figcaption class="gallery__credit">BY: { m.Creator }</figcaption>
 					}
 				</li>
 			}
@@ -28,5 +34,5 @@ templ Gallery(items []sighting.Media) {
 }
 
 func altText(m sighting.Media) string {
-	return cmp.Or(m.Title, m.Description, "Sighting media")
+	return cmp.Or(m.Title, m.Description, "Specimen visual")
 }
